@@ -14,7 +14,7 @@ import os
 import random
 import shutil
 from pathlib import Path
-import pvPackage as pv
+import pvnrt as pv
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten

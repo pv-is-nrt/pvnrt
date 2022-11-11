@@ -127,7 +127,7 @@ def filetype_search(src_path, file_exts, verbose=0) -> list:
     if verbose>0:
         print('Walked through {} subfolders and found {} matching files [Processing time {} ms].'.format(TOTAL_SUBFOLDERS, TOTAL_FILES, processing_time(start_time)))
     
-    return paths;
+    return paths
 
 #    REMOVE HEADS FROM FILE PATHS
 # -------------------------------------------------------------------- #
@@ -370,7 +370,7 @@ def basic_logger(
 # ============================================================================ #
 #
 
-#    EVALUEATE PROCESSING TIME
+#    EVALUATE PROCESSING TIME
 # -------------------------------------------------------------------- #
 
 def start_time():
