@@ -157,12 +157,13 @@ def get_glob_paths_list(path:str, glob:str):
 
     """
     Get list of paths from a given path (common path for all the intended globs) with a given glob string. See pathlib.Path.glob() for more details.
-
-    Returns a list if multiple paths are found, or a single path if only one is found.
+    Returns a list of paths found.
     """
-
     glob_list = list(Path(path).glob(glob))
-    return glob_list if len(glob_list)>1 else glob_list[0]
+    # raise error if no paths are found
+    if len(glob_list) == 0:
+        raise Exception('No paths found with the given glob string.')
+    return glob_list
 
 #    FIND NEXT ID
 # -------------------------------------------------------------------- #
