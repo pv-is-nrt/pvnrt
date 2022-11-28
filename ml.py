@@ -6,6 +6,8 @@
 #
 # ============================================================================ #
 
+
+
 # ============================================================================ #
 #    IMPORTS
 # ============================================================================ #
@@ -26,9 +28,82 @@ import numpy as np
 import itertools
 import matplotlib.patheffects as pEffects
 
+
+
 # ============================================================================ #
-#    SPLIT DATA INTO TVT
+#    CONSTANTS
 # ============================================================================ #
+
+VALID_PARAMS = {
+    # EXPERIMENT
+    'EXP_TITLE',
+    'EXP_DESCRIPTION',
+    # DATA
+    'DATA_FILE_PATH', # full path; name and ext can be derived from this
+    # MODEL
+    'MODEL_SUMMARY', # string
+    'MODEL_ARCH_FILE_PATH',
+    'TRAINED_MODEL_FILE_PATH',
+    # COMPILE
+    'LOSS_FUNCTION',
+    'METRICS',
+    'LEARNING_RATE',
+    # FIT
+    'BATCH_SIZE',
+    'EPOCHS',
+    'FIT_VALIDATION_SPLIT',
+    'FIT_SHUFFLE',
+    # PREDICT
+    'PREDICT_BATCH_SIZE',
+    # EVALUATE
+    'TRAIN_ACCURACY_0.5',
+    'VAL_ACCURACY_0.5',
+    'TEST_ACCURACY_0.5',
+    'TRAIN_CM_0.5',
+    'VAL_CM_0.5',
+    'TEST_CM_0.5',
+    'THRESHOLDS', # vary thresholds params BEGIN ->
+    'TRAIN_ACCURACIES',
+    'VAL_ACCURACIES',
+    'TEST_ACCURACIES',
+    'TRAIN_TPR',
+    'VAL_TPR',
+    'TEST_TPR',
+    'TRAIN_FPR',
+    'VAL_FPR',
+    'TEST_FPR',
+    'TRAIN_THRESHOLD_BEST',
+    'TRAIN_THRESHOLD_INDEX_BEST',
+    'VAL_THRESHOLD_BEST',
+    'VAL_THRESHOLD_INDEX_BEST',
+    'TEST_THRESHOLD_BEST',
+    'TEST_THRESHOLD_INDEX_BEST',
+    'TRAIN_ACCURACY_BEST',
+    'VAL_ACCURACY_BEST',
+    'TEST_ACCURACY_BEST',
+    'TEST_ACCURACY_CONST', # calculated using best threshold from train/val
+    'TRAIN_CM_BEST',
+    'VAL_CM_BEST',
+    'TEST_CM_BEST',
+    'TEST_CM_CONST', # calculated using best threshold from train/val
+                     # vary threshold params END <-
+    # CALLBACKS
+    'CALLBACKS_MONITOR',
+    'CALLBACKS_MODE',
+    'CALLBACKS_SAVE_BEST_ONLY',
+    'CALLBACKS_SAVE_WEIGHTS_ONLY',
+    'CALLBACKS_SAVE_FREQ',
+    'CALLBACKS_FILE_PATH',
+    # IMAGES
+    'IMAGE_SIZE', # tuple of (height, width)
+}
+
+
+
+# ============================================================================ #
+#    SPLIT DATA
+# ============================================================================ #
+
 
 #    SUBFOLDER IS CLASS
 # ============================================================================ #
@@ -56,9 +131,9 @@ def dataset_splitting_subFolderIsClass(
 
       moveSrcFiles (boolean, optional): If set to true, the function will move the files instead of copying them. Default is False.
 
-      fileExtensions (string or list, optional): If passed, only the files with the passsed file extensions (lowercase and without the .) are searched for and moved/copied. A string can be passed instead of a tuple/list if only one extension needs to be specified. Filenames ending with the exact string are utilized.
+      fileExtensions (string or list, optional): If passed, only the files with the passed file extensions (lowercase and without the .) are searched for and moved/copied. A string can be passed instead of a tuple/list if only one extension needs to be specified. Filenames ending with the exact string are utilized.
 
-      tvtRatio (float, list of floats or ints, optional): Splits the data in the provided ratios. Ratios such as 0.7, 12, [0.8], [0.8, 0.2], [0.8, 0.1, 0.1], [6, 3], [500, 100, 200] and so on... are all valid. In most cases, the function will correctly interpet the ratios and normalize them. Ratios such as [80, 10, 5, 5] are invalid (4 elements) and will cause the function to quit. It is possible to subsample the source files, i.e. utilize only a fraction of the entire dataset by providing 3 ratios whose sum is less than or equal to 1. 
+      tvtRatio (float, list of floats or ints, optional): Splits the data in the provided ratios. Ratios such as 0.7, 12, [0.8], [0.8, 0.2], [0.8, 0.1, 0.1], [6, 3], [500, 100, 200] and so on... are all valid. In most cases, the function will correctly interpret the ratios and normalize them. Ratios such as [80, 10, 5, 5] are invalid (4 elements) and will cause the function to quit. It is possible to subsample the source files, i.e. utilize only a fraction of the entire dataset by providing 3 ratios whose sum is less than or equal to 1. 
 
       seed (number, optional): Seed used for random sampling for images. Use the same number if it is intended to get the same TVT samples repeatedly. Default is None, which means that the sampling will be non-repeatable because random function by default uses the system time as seed.
 
@@ -214,7 +289,7 @@ def dataset_splitting_subFolderIsClass(
         # initiate a filename list to hold names of all files in a given class
         filename_list = []
 
-        # IMPORTANT: subdirectories inside a class folder are not ideal, besides they may hold duplicate file names. Intentially not using scandir, so that files deeper in the path are also returned just in case.
+        # IMPORTANT: subdirectories inside a class folder are not ideal, besides they may hold duplicate file names. Intentionally not using scandir, so that files deeper in the path are also returned just in case.
         for dirPath, subfolders, files in os.walk(class_path):
 
             # loop through all files
@@ -321,7 +396,7 @@ def paths_to_tvt(
 
       clearDestination (boolean, optional): If set to true, will delete the destination folder and everything inside it, if the folder is found to exist. Default is False, if the subfolder is found to exist, the function will quit.
 
-      tvtRatio (float, list of floats or ints, optional): Splits the data in the provided ratios. Ratios such as 0.7, 12, [0.8], [0.8, 0.2], [0.8, 0.1, 0.1], [6, 3], [500, 100, 200] and so on... are all valid. In most cases, the function will correctly interpet the ratios and normalize them. Ratios such as [80, 10, 5, 5] are invalid (4 elements) and will cause the function to quit. It is possible to subsample the source files, i.e. utilize only a fraction of the entire dataset by providing 3 ratios whose sum is less than or equal to 1. 
+      tvtRatio (float, list of floats or ints, optional): Splits the data in the provided ratios. Ratios such as 0.7, 12, [0.8], [0.8, 0.2], [0.8, 0.1, 0.1], [6, 3], [500, 100, 200] and so on... are all valid. In most cases, the function will correctly interpret the ratios and normalize them. Ratios such as [80, 10, 5, 5] are invalid (4 elements) and will cause the function to quit. It is possible to subsample the source files, i.e. utilize only a fraction of the entire dataset by providing 3 ratios whose sum is less than or equal to 1. 
 
       seed (number, optional): Seed used for random sampling for images. Use the same number if it is intended to get the same TVT samples repeatedly. Default is None, which means that the sampling will be non-repeatable because random function by default uses the system time as seed.
 
@@ -490,7 +565,7 @@ def paths_to_tvt(
 
     if not softMode:
         # Move/copy the files from the source folder (class subfolders) to the destination (class subfolder) within either the T, V or T folder.
-        # Note: If the file is not found in the directory, that means it was wrongly present in the excel file (ther reverse can also be true, a file may exist in the directory but not in the excel file). In this case, the file will be skipped and log an error.
+        # Note: If the file is not found in the directory, that means it was wrongly present in the excel file (the reverse can also be true, a file may exist in the directory but not in the excel file). In this case, the file will be skipped and log an error.
         for item in train_list:
             if Path(item).is_file():
                 shutil.copy2(Path(item), Path(dstPath, 'train', className, Path(item).parents[0].name+' '+Path(item).name))
@@ -515,8 +590,14 @@ def paths_to_tvt(
     
     return return_dict
 
+
+
 # ============================================================================ #
-#    SIMPLE SEQUENTIAL DENSE MODEL
+#    MODELS
+# ============================================================================ #
+
+
+#    SEQUENTIAL DENSE MODELS
 # ============================================================================ #
 
 def dense_model_simple(
@@ -554,8 +635,7 @@ def dense_model_simple(
     return model
 
 
-# ============================================================================ #
-#    SIMPLE SEQUENTIAL CNN MODEL
+#    SEQUENTIAL CNN MODELS
 # ============================================================================ #
 
 def cnn_model_simple(
@@ -605,8 +685,22 @@ def cnn_model_simple(
     return model
 
 
+def model_summary_to_string(model, delimiter:str=';'):
+    
+        """
+        Convert the summary of a model to a pretty string.
+        """
+        return 'model name = ' + model.name + delimiter + delimiter.join(
+            [layer.name + '(' + layer.__class__.__name__ + ') | shape = ' + str(layer.output_shape) + ' | params = ' + str(layer.count_params()) for layer in model.layers]) + delimiter + 'total params = ' +  str(model.count_params()) 
+
+
+
 # ============================================================================ #
-#    PLOT CONFUSION MATRIX
+#    PLOTS
+# ============================================================================ #
+
+
+#    CONFUSION MATRIX
 # ============================================================================ #
 
 def plot_confusion_matrix(
@@ -665,8 +759,7 @@ def plot_confusion_matrix(
         plt.show()
 
 
-# ============================================================================ #
-#    CUSTOM CM AND ROC THINGS
+#    CM AND ROC THINGS
 # ============================================================================ #
 
 # based on the predictions on the test set, we can calculate CM and ROCs ab initio.
@@ -705,7 +798,7 @@ def binary_cm_roc(
 
     for t in thresholds:
 
-        # probabilty (of a given sample to be the '1' class) is a number between 0 and 1 for single neuron. Also, it looks like the model.predict returns a list of lists, nx1, like [[0.06], [0.04], ...], so we need to access the probability for each row using [:, 0].
+        # probability (of a given sample to be the '1' class) is a number between 0 and 1 for single neuron. Also, it looks like the model.predict returns a list of lists, nx1, like [[0.06], [0.04], ...], so we need to access the probability for each row using [:, 0].
         decisions = probabilities[:, 0] > t # if probability is greater than threshold, it is a '1' class.
         # NOTE: I think for one-hot encoding the code for decisions stays the same, except that > t is replaced by < t.
         # convert decisions to ints
@@ -738,7 +831,7 @@ def binary_cm_roc(
     # find the best roc point, based on its distance from the point (0,1)
     # hint: distance of (x,y) from point (0,1) = x^2 + (y-1)^2
     distances = np.square(np.array(fpr_per_t)) + np.square(np.array(tpr_per_t)-1)
-    # find index of minimum distance (the first occurance from left is returned)
+    # find index of minimum distance (the first occurrence from left is returned)
     best_index = np.argmin(distances)
     # best threshold is the point of this index
     best_threshold = thresholds[best_index]
