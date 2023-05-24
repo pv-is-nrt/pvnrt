@@ -1,0 +1,5 @@
+# Stylesheet for figures fit for publication (and saving)
+# that appear as full width of a letter-size page
+# make sure to use pv.mplstyle, pv-light.mplstyle, pv-pub.mplstyle before using this
+
+figure.figsize : 6.4, 4.8 # slightly smaller than 6.5 inches which is fine

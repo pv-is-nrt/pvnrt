@@ -1,0 +1,30 @@
+# PV stylesheet for dark themed plotting (mostly based on Atom One Dark theme colors in VS Code)
+
+# NOTES
+# ------------
+# 262626 is MS Office dark background, 282C34 is VSCode Atom Dark background
+
+text.color: BBBBBB
+
+axes.facecolor: 282C34 # write as (R,G,B,A) so that alpha works
+axes.edgecolor: 999999
+axes.titlecolor: 44AABB # (was auto)
+axes.labelcolor: 999999
+axes.prop_cycle: cycler('color', ['BB4444', '88AA44', 'AA7700', '4444AA', '44BBAA', '8844AA','44AA44', 'BB2222', '336699', '775533'])
+                # salmon, green, gold, ink-blue, green-teal, purple, pastel-green, red, nice-blue, brown
+
+xtick.color: 999999
+xtick.labelcolor: AAAAAA
+ytick.color: 999999
+ytick.labelcolor: AAAAAA
+
+grid.color: 181818 # slightly darker than background
+
+legend.facecolor: 181818
+legend.edgecolor: 0.8 #(default is 0.8)
+
+figure.facecolor: 282C34 # 
+figure.edgecolor: none
+
+savefig.facecolor: auto # same as axes facecolor
+savefig.edgecolor: auto # same as figure edgecolor

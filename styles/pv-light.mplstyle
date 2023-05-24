@@ -1,0 +1,25 @@
+# PV stylesheet for light themed plotting
+# call on top of pv.mplstyle
+# also make sure that this style only modifies the colors and not the other settings
+
+text.color: 000000
+
+axes.facecolor: white
+axes.edgecolor: black
+axes.titlecolor: 000000 # (was auto)
+axes.labelcolor: 000000
+
+lines.markerfacecolor: white # note that this style is not transparent and so setting this white makes markers appear hollow and also hide lines and grids behind them
+
+xtick.color: 000000
+xtick.labelcolor: 000000
+ytick.color: 000000
+ytick.labelcolor: 000000
+
+grid.color: aaaaaa # slightly darker than background
+
+figure.facecolor: white
+
+savefig.transparent: False # needed for below to work
+savefig.facecolor: auto # works only when savefig.transparent is False
+savefig.edgecolor: auto # same as figure edgecolor

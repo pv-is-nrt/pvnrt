@@ -1,0 +1,27 @@
+lines.linewidth: 3.0
+lines.markeredgewidth: 3.0
+lines.markerfacecolor: white
+
+font.size: 14.0
+
+axes.linewidth: 3.0
+axes.titlesize: 20.0
+axes.titleweight: normal
+axes.titlepad: 15.0
+axes.labelsize: 16.0
+axes.labelpad: 10.0
+axes.labelweight: normal # bold, normal
+axes.xmargin: .05
+axes.ymargin: .05
+
+xtick.major.size: 8.0
+xtick.major.width: 3.0
+ytick.major.size: 8.0
+ytick.major.width: 3.0
+
+legend.edgecolor: 0.1   # lower value is darker
+legend.facecolor: eeeeee
+legend.framealpha: 0.8 # lower value is lighter
+legend.fancybox: False # set True for a rounded rectangle
+legend.numpoints: 1
+legend.markerscale: 1.0

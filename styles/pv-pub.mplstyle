@@ -1,0 +1,44 @@
+# Stylesheet for figures fit for publication (and saving)
+# make sure to use pv.mplstyle and pv-light.mplstyle before using this
+# this sheet assumes a half width figure
+# set sizes of things here, not the white and black colors
+
+figure.figsize : 3.2, 2.4 # Default is 6.4, 4.8 inches
+
+# the base fontsize in pv.mplstyle is set to 10. For publications, we can set exact font sizes or relative ones accordingly.
+axes.titlesize : 10 # the fontsize of the title of the entire plot
+axes.titlepad : 8 # how far the title is from the top of the plot
+axes.labelsize : 9 # x and y axis label font size
+axes.linewidth : 1 # the thickness of the axes lines
+axes.labelpad : 5 # how far the x and y axis labels are from the axes
+
+# publication friendly colors (move this to pv-pub later)
+axes.prop_cycle: cycler('color', ['0000FF', 'FF8800', '00FF00', 'FF0000', 'FF00FF', 'BB4400', '88FF00', '00FFFF', 'FF66CC', '66CCFF'])
+                # blue, orange, green, red, magenta, brown, lime, cyan, pink, light blue
+
+lines.linewidth : 1
+lines.markersize : 5
+lines.markeredgewidth: 1
+
+xtick.major.width : 1 # thickness of ticks
+xtick.major.size : 3 # length of ticks
+xtick.labelsize : 8 # font size of tick labels
+ytick.major.width : 1
+ytick.major.size : 3
+ytick.labelsize : 8
+ytick.alignment: center
+
+font.family : Arial # already set in pv.mplstyle, so this is redundant but I will leave it here because it is explicit here and no fallbacks are automatically allowed
+
+# grid.color : 999999 # not really needed, the default of 333333 and alpha 0.5 works fine
+
+legend.fontsize: 8 # font size of the legend
+legend.borderpad: 0.4
+legend.handlelength: 1.5
+legend.handletextpad: 0.5
+legend.borderaxespad: 0.5
+legend.columnspacing: 1.0
+
+# I would want to set it to 150 dpi, but What if a figure is needed for publication from an old experiment? If I need 600 for a publication, I will unfortunately have to run the experiment again.
+# Example png size: 150 dpi = 25.1 KB, 300 dpi = 71.5 KB, 600 dpi = 169 KB
+savefig.dpi : 300 # this is a compromise between 600 dpi and a draft figure dpe.
