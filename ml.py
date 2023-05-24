@@ -17,10 +17,10 @@ import random
 import shutil
 from pathlib import Path
 import pvnrt as pv
+from datetime import datetime
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -34,12 +34,15 @@ import matplotlib.patheffects as pEffects
 #    CONSTANTS
 # ============================================================================ #
 
-VALID_PARAMS = {
+VALID_PARAMS = [
     # EXPERIMENT
+    'AUTHOR',
     'EXP_TITLE',
     'EXP_DESCRIPTION',
+    'EXP_CONCLUSION',
     # DATA
     'DATA_FILE_PATH', # full path; name and ext can be derived from this
+    'DATA_FILE_PATHS', # list of full paths
     # MODEL
     'MODEL_SUMMARY', # string
     'MODEL_ARCH_FILE_PATH',
@@ -97,7 +100,191 @@ VALID_PARAMS = {
     'CALLBACKS_FILE_PATH',
     # IMAGES
     'IMAGE_SIZE', # tuple of (height, width)
-}
+]
+
+
+
+# ============================================================================ #
+#    CLASSES
+# ============================================================================ #
+
+
+class Experiment:
+
+    def __init__(self, studiesPath:Path, studyID:str, expID:str='', lenExpID:int=3, expIDPrefix:str='', validParams:list=VALID_PARAMS):
+
+        '''
+        A class to manage a computational experiment (within a study), primarily managing a report.txt Requires at least a study id, and a study folder path to initialize.
+
+        Initializes the experiment class. If exp_id is None, a new experiment is created. If exp_id is not None, the experiment is loaded from the report file.
+
+        NOTE: This class intentionally does not require an experiment folder name at the time of initialization, but leaves it to be set later, because often good experiment names come to mind during or after an experiment.
+
+        ARGUMENTS:
+
+          studiesPath (str, required): the path to the folder where all the study folders are stored for a project.
+
+          studyID (str, required): the study id. Must match 'the first word' of the study folder name.
+
+          expID (str, optional): the experiment id. If None, a new experiment is created.
+
+          lenExpID (int, optional): the length of the experiment id. Needed when creating a new experiment id, ignored when experiment exists. Default is 3. This param is implemented in the pvnrt.core.get_next_id() function where more details can be found, but setting this (as opposed to inferring) helps deal with the scenario when the study folder has inconsistent id lengths.
+
+          expIDPrefix (str, optional): the prefix at the start the name of the experiment id, and therefore, folder. Should match with prefixes of any existing folders.
+
+        '''
+
+        self.STUDIES_PATH = Path(studiesPath)
+        self.STUDY_ID = studyID
+        self.EXP_ID = expID
+        self.LEN_EXP_ID = lenExpID
+        self.EXP_ID_PREFIX = expIDPrefix
+        self.VALID_PARAMS = validParams
+
+        # find a path to the study folder based on the study id provided
+        self.STUDY_PATH = pv.core.get_paths(self.STUDIES_PATH, self.STUDY_ID + '*')[0] # throws an error if no match is found
+
+        # if EXP_ID is empty
+        if self.EXP_ID == '':
+            # initialize an experiment folder name for now
+            self._exp_folder_name = 'unnamed'
+            # generate a new experiment id
+            self.EXP_ID = pv.core.get_next_id(self.STUDY_PATH, 
+                            lenID=self.LEN_EXP_ID, 
+                            removePrefix=self.EXP_ID_PREFIX, 
+                            fileOrDir='dir')
+            # create a new experiment folder
+            self.EXP_PATH = Path(self.STUDY_PATH, self.EXP_ID_PREFIX + str(self.EXP_ID) + ' ' + self._exp_folder_name)
+            self.EXP_PATH.mkdir()
+            # create a new experiment report file
+            self.REPORT_FILE_PATH = self.EXP_PATH / 'report.txt'
+            self.REPORT_FILE_PATH.touch()
+            # add first contents to report file
+            self._init_exp_report_file()
+
+        # if EXP_ID is provided
+        else:
+            # find the experiment folder based on the experiment id
+            self.EXP_PATH = pv.core.get_paths(
+                            self.STUDY_PATH, 
+                            self.EXP_ID_PREFIX + str(self.EXP_ID) + '*'
+                            )[0] # throws an error if no folder is found
+            # get and set the experiment folder name, get the part after the space
+            self._exp_folder_name = self.EXP_PATH.name.split(' ', 1)[1]
+            # make sure that the report file exists, also sets the report file path variable (since it wasn't set outside of the if statement)
+            self.REPORT_FILE_PATH = pv.core.get_paths(
+                            self.EXP_PATH, 
+                            'report.txt'
+                            )[0] # throws an error if no match is found
+        
+        # In either case, initialize a dict to hold the contents of the report file. It will be possible to add to this dict from an object, and update the report file only when an update method is called.
+        self._params = self._load_params_from_report_file()
+    
+    #----- initialization complete -----#
+    
+
+    def _init_exp_report_file(self):
+            '''
+            Writes the experiment report file for the first time.
+            '''
+            with open(self.REPORT_FILE_PATH, 'w') as f:
+                f.write('# FILE CONTAINING REPORT OF AN EXPERIMENT\n'
+                        '# Initial parameters start with !\n'
+                        '# Comments start with #\n'
+                        '# File created on: ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '\n'
+                        '#\n')
+                f.write('!STUDY_NAME = ' + self.STUDY_PATH.name + '\n' +
+                        '!STUDY_ID = ' + self.STUDY_ID + '\n' +
+                        '!EXP_ID = ' + str(self.EXP_ID) + '\n' +
+                        '~'*80 + '\n') # this line will be utilized to retain the top part of the file during updates
+
+
+    def _load_params_from_report_file(self):
+        '''
+        Reads the experiment report file and returns the contents in a form of a dictionary.
+        '''
+        params_dict = {}
+        with open(self.REPORT_FILE_PATH, 'r') as f:
+            for line in f:
+                if not line.startswith('#') and not line.startswith('!') and not line.startswith('~') and not line.startswith('\n'):
+                    key, value = line.split(' = ', 1)
+                    params_dict[key] = value.strip()
+        return params_dict
+
+
+    def set_exp_folder_name(self, name:str):
+        '''
+        Sets the experiment folder name. Provide the part without the id and prefix. Renames the experiment folder if it already exists. For simplicity, experiment folder name is not stored in the report.
+        '''
+
+        self._exp_folder_name = name
+        # note that the experiment has already been initialized, hence the experiment folder exists. Rename the folder first, using the old path
+        self.EXP_PATH.rename(self.EXP_PATH.parent / (self.EXP_ID_PREFIX + str(self.EXP_ID) + ' ' + self._exp_folder_name))
+        # then update the path variable
+        self.EXP_PATH = self.EXP_PATH.parent / (self.EXP_ID_PREFIX + str(self.EXP_ID) + ' ' + self._exp_folder_name)
+        # will also need to update the report file path
+        self.REPORT_FILE_PATH = self.EXP_PATH / 'report.txt'
+
+
+    def set_param(self, name:str, value):
+        '''
+        Sets a parameter in the params dict. If the parameter already exists, it is overwritten. Does not write to the report file.
+        Note for self: note that this can also be set directly using Object._params['name'] = 'value', but I prefer using a method for this for the sake of consistency.
+        '''
+        # warn user if the param name provided is present in the pv.ml VALID_PARAMS list
+        if name not in pv.ml.VALID_PARAMS:
+            print('NOTE: the parameter name {} is not present in the pv.ml.VALID_PARAMS list. No action is required. However, user is advised to check for typos or add the parameter to the list.'.format(name))
+        self._params[name] = value
+
+
+    def get_param(self, name:str):
+        '''
+        Returns the value of a parameter from the params dict.
+        NOTE: value will be string if loaded from the report file. Convert to appropriate type if needed.
+        '''
+        return self._params[name]
+
+    def get_all_params(self):
+        '''
+        Returns the params dict.
+        '''
+        return self._params
+
+
+    def del_param(self, name:str):
+        '''
+        Deletes a parameter from the params dict.
+        '''
+        del self._params[name]
+
+
+    def update_report_file(self):
+        '''
+        Updates the lines in the report file from the values in the params dict.
+        '''
+        # load the existing parameters from the report file
+        temp_params = self._load_params_from_report_file()
+        # update the existing parameters with the new ones
+        temp_params.update(self._params)
+        # add a modified date
+        temp_params['MODIFIED_DATE'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        # read the current contents of the report file and copy the head of the file to a list
+        file_content_lines = []
+        with open(self.REPORT_FILE_PATH, 'r') as f:
+            for line in f:
+                file_content_lines.append(line)
+                if line.startswith('~'):
+                    # break the loop
+                    break
+        # append the updated parameters to the list
+        for key, value in temp_params.items():
+            file_content_lines.append(key + ' = ' + str(value) + '\n')
+
+        # delete the old report file
+        self.REPORT_FILE_PATH.unlink()
+        # write the new report file
+        with open(self.REPORT_FILE_PATH, 'w') as f:
+            f.writelines(file_content_lines)
 
 
 
@@ -110,8 +297,8 @@ VALID_PARAMS = {
 # ============================================================================ #
 
 def dataset_splitting_subFolderIsClass(
-    srcPath:str, dstPath:str='', dstSubFolderName:str='splitData', clearDestination:bool=False, moveSrcFiles:bool=False, fileExtensions:list='', 
-    tvtRatio:list=[7,2,1], seed:int=None, 
+    srcPath:Path, dstPath:Path=Path(), dstSubFolderName:str='splitData', clearDestination:bool=False, moveSrcFiles:bool=False, fileExtensions='', 
+    tvtRatio:list=[7,2,1], seed=None, 
     softMode:bool=True, verbose:int=0
     ):
 
@@ -149,7 +336,7 @@ def dataset_splitting_subFolderIsClass(
     EXAMPLE:
     The following code will move all files (no file extensions passed) from the 'cats' and 'dogs' subfolders found inside the source path to the (destination path = current directory > split > train > (cats, dogs); val > (cats, dogs)) folders. Because an empty string is passed by default to the destination, it means that the split data will be created (within a subfolder) in the current directory. It will delete the specified destination subfolder (split) if it already exists. The ratio provided is a single value of 0.8, which is interpreted by the function to use 80% data for training set and remaining data for the validation set.
 
-        SRC_PATH = '\cats and dogs'
+        SRC_PATH = '/cats and dogs'
         pv.ml.dataset_splitting_subFolderIsClass(SRC_PATH, dstSubFolderName='split', clearDestination=True, moveSrcFiles=True, tvtRatio=0.8)
 
     """
@@ -706,8 +893,8 @@ def model_summary_to_string(model, delimiter:str=';'):
 
 def plot_confusion_matrix(
     cm, classes='',
-    title=None,
-    savePath:str=None,
+    title='',
+    savePath=None,
     displayDpi=120, saveDpi=300,
     cmap=plt.cm.Oranges, styleSheet='default',
     xTickRotation=0, yTickRotation=90

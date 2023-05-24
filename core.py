@@ -129,6 +129,7 @@ def filetype_search(src_path, file_exts, verbose=0) -> list:
     
     return paths
 
+
 #    REMOVE HEADS FROM FILE PATHS
 # -------------------------------------------------------------------- #
 def remove_path_head(filePaths:list, levels:int):
@@ -151,23 +152,25 @@ def remove_path_head(filePaths:list, levels:int):
         new_file_paths.append(new_path)
     return new_file_paths
 
+
 #    GET GLOB PATH LIST
 # -------------------------------------------------------------------- #
-def get_glob_paths_list(path:str, glob:str):
+def get_paths(path:Path, glob:str)->list:
 
     """
-    Get list of paths from a given path (common path for all the intended globs) with a given glob string. See pathlib.Path.glob() for more details.
+    Get list of paths within a given path with a given glob string. See pathlib.Path.glob() for more details.
     Returns a list of paths found.
     """
     glob_list = list(Path(path).glob(glob))
     # raise error if no paths are found
     if len(glob_list) == 0:
-        raise Exception('No paths found with the given glob string.')
+        raise Exception('No matching paths found.')
     return glob_list
+
 
 #    FIND NEXT ID
 # -------------------------------------------------------------------- #
-def get_next_id(rootDir:str, removePrefix:str, lenID:int, fileOrDir:str='dir'):
+def get_next_id(rootDir:Path, removePrefix:str, lenID:int, fileOrDir:str='dir'):
 
     """
     Finds the next ID (number, largest) from the given directory. The directory is expected to have folders with names containing an ID number of a fixed length. The ID number must be an integer. Maximum ID number is found and 1 is added to it and returned.
@@ -380,7 +383,7 @@ def start_time():
     """
     return datetime.now().timestamp()
 
-def processing_time(start_time:float, stop_time='now', units:str='ms', decimals:int=3) -> float:
+def processing_time(start_time:float, stop_time=datetime.now().timestamp(), units:str='ms', decimals:int=3):
     
     """
     Evaluates and returns the duration of time elapsed between two time stamps or between a given time stamp and when the function is called.
@@ -392,7 +395,7 @@ def processing_time(start_time:float, stop_time='now', units:str='ms', decimals:
 
       start_time (required): timestamp at the beginning.
         
-      stop_time (optional): timestamp at the end. Default is whenever the function is called. You will not have to specify the keyword 'now' to use the default.
+      stop_time (optional): timestamp at the end. Default is whenever the function is called.
 
       units (string, optional, default is ms (milliseconds)): is a string defining the units of the returned time. Allowed values are mins, min or m (for minutes), s (for seconds), ms (for milliseconds) or um (for microseconds).
 
@@ -407,10 +410,6 @@ def processing_time(start_time:float, stop_time='now', units:str='ms', decimals:
         processing_time(time)
 
     """
-
-    # if the stop time is passed as the keyword now then convert that to the current timestamp. For some reason passing it inside the function definition argument did not work.
-    if stop_time == 'now':
-        stop_time = datetime.now().timestamp()
     
     # Return the time according to the units, decimals
     if units == 'ms':
@@ -509,7 +508,7 @@ def image_resize(
     # If the destination is same as source folder (specified by the value 'source')
     if dstPath == 'source':
         # PLACEHOLDER: this condition will be tackled for each image inside the loop
-        None
+        pass
     else:
         # PLACEHOLDER: some of this condition will be tackled for each image inside the loop
         # but we can at least convert the path to a Path object here
@@ -541,8 +540,11 @@ def image_resize(
             # -------------------------------------------------------------------- #
             if mode=='fit':
                 new_image = ImageOps.fit(image, (width, height))
-            if mode=='contain':
+            elif mode=='contain':
                 new_image = ImageOps.contain(image, (width, height))
+            else:
+                print('ERROR: Invalid mode specified. Function exiting.')
+                return None
             
             #    HANDLE SAVE/RETURN FOR EACH IMAGE
             # -------------------------------------------------------------------- #
@@ -679,6 +681,7 @@ def dataframes_to_new_excel(dataframes:list, sheetnames:list, fullFileName:str, 
             dataframes[i].to_excel(excelWriter, sheet_name=sheetnames[i])
             if verbose:
                 print('Written to sheet:{}'.format(sheetnames[i]))
+        # save the excel file
         excelWriter.save()
         print('File {} created successfully'.format(path))
     else:
@@ -701,21 +704,21 @@ def dataframes_to_new_excel(dataframes:list, sheetnames:list, fullFileName:str, 
 def plot_simple(
     xDataList, yDataList, seriesLabels=None,
     markers=None, colors=None,
-    xLabel=None, yLabel=None, title=None,
+    xLabel='', yLabel='', title='',
     xLimits=None, yLimits=None,
     legendLocation='best',
     styleSheet='default',
     figSize=(3.2, 2.4), 
     savePath=None,
     displayDPI=150, saveDPI=300
-    ) -> plt:
+    ):
 
     """
     A simple function to plot a scatter style plot of Y vs X, offering quick access to customizing labels, title, axis limits and style sheet.
 
     ARGUMENTS:
 
-      xDataList (list(s), required): A list or lists containing x-axis data. If a single xData list is passed, make sure it is passed inside a list.
+      xDataList (list(s), required): A list containing x-axis data. This is common for all yData.
 
       yDataList (list(s), required): A list or lists containing y-axis data. If a single yData list is passed, make sure it is passed inside a list. For example, [history['accuracy']] and not just history['accuracy'].
 
