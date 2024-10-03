@@ -43,13 +43,19 @@ VALID_PARAMS = [
     # DATA
     'DATA_FILE_PATH', # full path; name and ext can be derived from this
     'DATA_FILE_PATHS', # list of full paths
+<<<<<<< Updated upstream
+=======
+    'TVT_RATIO', # tuple of (train, val, test) ratios
+>>>>>>> Stashed changes
     # MODEL
     'MODEL_SUMMARY', # string
     'MODEL_ARCH_FILE_PATH',
-    'TRAINED_MODEL_FILE_PATH',
+    'MODEL_ID',
+    'TRAINED_MODEL_PATH',
     'USE_TRAINED_MODEL',
     # COMPILE
-    'LOSS_FUNCTION',
+    'OPTIMIZER',
+    'LOSS',
     'METRICS',
     'LEARNING_RATE',
     # FIT
